@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/Los_Angeles
@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
     locales \
-    sudo
+    sudo --fix-missing
 
 RUN sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
@@ -25,15 +25,16 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/install.sh)" -
 
 RUN chsh -s /bin/zsh root
 
-ARG USER_ID=1000
-ARG GROUP_ID=1000
-RUN groupadd --gid $GROUP_ID dev && \
-    useradd --uid $USER_ID --gid $GROUP_ID --create-home dev && \
-    mkdir -p /home/dev/ros2_ws/src && \
-    chown -R dev:dev /home/dev/ros2_ws
+RUN mkdir -p /home/dev/ros2_ws/src && \
+    chown -R root:root /home/dev/ros2_ws
 
-USER dev
+USER root
 WORKDIR /home/dev/ros2_ws
+
+RUN sudo apt-get update && apt-get install -y curl gnupg lsb-release
+RUN sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
 RUN sudo apt-get update && sudo apt-get install -y \
     ros-humble-desktop \

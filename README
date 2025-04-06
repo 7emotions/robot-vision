@@ -1,0 +1,15 @@
+# Robot-Vision
+
+
+## ws 
+
+ROS Workspace
+
+
+## Yolo
+
+yolov10s
+
+1. 在`yolo/`下新建`dataset/`。
+2. 运行`split.py`划分数据集。
+3. 运行`docker-compose up -d`开始训练。
