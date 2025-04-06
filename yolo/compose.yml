@@ -17,12 +17,3 @@ services:
               count: all
               capabilities: [ gpu ]
     command: yolo train model=/app/yolov10s.pt data=/app/conf.yml epochs=100
-
-  deployer:
-    build:
-      context: .
-      dockerfile: Dockerfile.deploy.rpi
-    volumes:
-      - /path/to/your/cpp_app:/app/cpp_app # 挂载你的 C++ 推理代码
-      - /path/to/your/exported_model:/app/your_model.onnx # 挂载你导出的模型
-      - /path/to/your/test_images:/path/to/image # (可选) 挂载测试图片目录

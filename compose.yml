@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  ros2_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ros2_dev_image
+    container_name: ros2_dev_container
+    volumes:
+      - ./ws:/home/dev/ros2_ws
+    tty: true
+    stdin_open: true
+    privileged: true 
+    environment:
+      - DISPLAY=${DISPLAY}
+    network_mode: host 

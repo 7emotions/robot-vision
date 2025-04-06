@@ -19,7 +19,6 @@ def split_dataset(image_dir, label_dir, train_ratio=0.8):
     train_images = image_files[:split_index]
     val_images = image_files[split_index:]
 
-    # 创建训练集和验证集目录（如果不存在）
     os.makedirs(os.path.join(image_dir, 'train'), exist_ok=True)
     os.makedirs(os.path.join(image_dir, 'val'), exist_ok=True)
     os.makedirs(os.path.join(label_dir, 'train'), exist_ok=True)
@@ -37,7 +36,6 @@ def split_dataset(image_dir, label_dir, train_ratio=0.8):
         if os.path.exists(src_label_path):
             move(src_label_path, dst_label_path)
         else:
-            # 创建一个空的标签文件
             with open(dst_label_path, 'w') as f:
                 pass
             print(f"信息: 为训练集图像 {img_file} 创建了空的标签文件。")
@@ -60,7 +58,6 @@ def split_dataset(image_dir, label_dir, train_ratio=0.8):
             print(f"信息: 为验证集图像 {img_file} 创建了空的标签文件。")
 
 if __name__ == "__main__":
-    # 将这里的路径替换为你的实际图像和标签目录
     image_directory = 'dataset/images'
     label_directory = 'dataset/labels'
     train_proportion = 0.8  # 80% 用于训练，20% 用于验证
