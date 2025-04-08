@@ -1,4 +1,4 @@
 train: dataset/images/train
 val: dataset/images/val
 nc: 7
-names: ["red target", "blue area", "blue target", "starting point",black target","yellow target","red area"]
+names: ["starting point","blue target","black target","blue area","red target","yellow target","rad area"]

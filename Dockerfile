@@ -1,68 +1,71 @@
-FROM ubuntu:22.04
+FROM osrf/ros:humble-desktop AS develop
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=America/Los_Angeles
+ENV TZ=Asia/Tokyo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
+RUN apt-get update && apt-get install -y \
     wget \
-    vim \
+    curl \
     git \
-    build-essential \
-    cmake \
-    python3 \
+    vim \
+    tmux \
     python3-pip \
-    locales \
-    sudo --fix-missing
+    ros-humble-usb-cam \
+    ros-humble-serial \
+    --no-install-recommends
 
-RUN sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-    locale-gen
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
-
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/install.sh)" --insecure
-
-RUN chsh -s /bin/zsh root
-
-RUN mkdir -p /home/dev/ros2_ws/src && \
-    chown -R root:root /home/dev/ros2_ws
-
-USER root
-WORKDIR /home/dev/ros2_ws
-
-RUN sudo apt-get update && apt-get install -y curl gnupg lsb-release
-RUN sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-
-RUN sudo apt-get update && sudo apt-get install -y \
-    ros-humble-desktop \
-    ros-humble-rclcpp \
-    ros-humble-rviz2 \
-    ros-humble-tf2-ros \
-    ros-humble-geometry2 \
-    ros-humble-nav2-bringup
-
-RUN echo "source /opt/ros/humble/setup.bash" >> ~/.zshrc
-RUN echo "source /home/dev/ros2_ws/install/setup.bash" >> ~/.zshrc
-
-RUN sudo apt-get update && sudo apt-get install -y \
+# OpenCV
+RUN apt-get update && apt-get install -y \
     libopencv-dev \
-    python3-opencv
+    python3-opencv \
+    --no-install-recommends
 
-RUN wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB -O intel-gpg-key.pub && \
-    sudo apt-key add intel-gpg-key.pub && \
-    sudo add-apt-repository "deb https://apt.repos.intel.com/openvino/latest/apt ubuntu $(lsb_release -sc) main" && \
-    sudo apt-get update && sudo apt-get install -y \
-    intel-openvino-runtime-dev \
-    intel-openvino-dev-tools
+# zsh & oh-my-zsh
+RUN apt-get update && apt-get install -y zsh --no-install-recommends
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/install.sh)" --insecure
 
-RUN sudo apt-get update && sudo apt-get install -y libserial-dev
+RUN chsh -s /bin/zsh ros
 
-RUN sudo apt-get clean && rm -rf /var/lib/apt/lists/*
+WORKDIR /ros2_ws
 
-USER root
-RUN rm -rf /tmp/* /var/tmp/*
+ENV ROS_DOMAIN_ID=0
+ENV ROS_DISTRO=humble
+ENV RCUTILS_LOGGING_BUFFER_SIZE=1024
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
-CMD ["/bin/zsh"]
+RUN pip3 install --upgrade pip
+
+RUN pip3 install foxglove-cli
+
+USER ros
+
+CMD ["bash"]
+
+
+FROM osrf/ros:humble-ros-base AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Tokyo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN apt-get update && apt-get install -y \
+    ros-humble-usb-cam \
+    ros-humble-serial \
+    libopencv-dev \
+    python3-opencv \
+    --no-install-recommends
+
+RUN apt-get update && apt-get install -y python3-pip --no-install-recommends
+RUN pip3 install --upgrade pip
+
+WORKDIR /app
+
+COPY --from=develop /ros2_ws/install /app/install
+
+ENV ROS_DOMAIN_ID=0
+ENV ROS_DISTRO=humble
+ENV RCUTILS_LOGGING_BUFFER_SIZE=1024
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+CMD ["bash", "-c", "source /app/install/setup.bash"]
