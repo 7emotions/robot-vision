@@ -1,4 +1,4 @@
-FROM osrf/ros:humble-desktop AS develop
+FROM ros:humble AS develop
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Tokyo
@@ -43,7 +43,7 @@ USER ros
 CMD ["bash"]
 
 
-FROM osrf/ros:humble-ros-base AS runtime
+FROM ros:humble AS runtime
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Tokyo
